@@ -1,0 +1,192 @@
+from flask import Flask, request
+from motor_decisao import avaliar_vacinas
+
+app = Flask(__name__)
+
+VACINAS_FORM = {
+    "BCG": [0],
+    "Hepatite B": [0],
+    "Pentavalente": [2, 4, 6],
+    "VIP": [2, 4, 6],
+    "Rotavírus": [2, 4],
+    "Pneumocócica 10v": [2, 4, 12],
+    "Meningocócica C": [3, 5, 12],
+    "Tríplice Viral (SCR)": [12, 15],
+    "DTP": [15, 48],
+    "Hepatite A": [15],
+    "Febre Amarela": [9, 48],
+}
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    mostrar_resultado = False
+    resultado_html = ""
+
+    # Valores padrão (GET)
+    anos = 0
+    meses = 0
+    doses_marcadas = {}
+
+    if request.method == "POST":
+        mostrar_resultado = True
+
+        anos = int(request.form.get("anos", 0))
+        meses = int(request.form.get("meses", 0))
+        idade_meses = anos * 12 + meses
+
+        doses_marcadas = {
+            vacina: request.form.getlist(vacina)
+            for vacina in VACINAS_FORM
+        }
+
+        # Converter para int
+        doses = {
+            vacina: [int(m) for m in meses_lista]
+            for vacina, meses_lista in doses_marcadas.items()
+        }
+
+        pode, nao = avaliar_vacinas(idade_meses, doses)
+
+        resultado_html += "<div class='resultado pode'><h3>🟢 Pode administrar</h3>"
+
+        if pode:
+            for item in pode:
+                vacina = item["vacina"]
+                dose = item.get("dose", "")
+                faltam = item.get("faltam", 0)
+
+                dose_txt = "Reforço" if dose == "R" else dose
+
+                if faltam == 0:
+                    texto = f"<p><b>{vacina}</b> — {dose_txt}</p>"
+                elif faltam == 1:
+                    texto = (
+                        f"<p><b>{vacina}</b> — {dose_txt}. "
+                        "Após a administração de hoje, faltará uma dose.</p>"
+                    )
+                else:
+                    texto = (
+                        f"<p><b>{vacina}</b> — {dose_txt}. "
+                        f"Após a administração de hoje, faltam {faltam} doses.</p>"
+                    )
+
+                resultado_html += texto
+        else:
+            resultado_html += "<p>Nenhuma vacina indicada.</p>"
+
+        resultado_html += "</div>"
+
+        if len(pode) >= 5:
+            resultado_html += (
+                "<div class='alerta'>"
+                "⚠️ Muitas vacinas indicadas nesta visita. Avaliar priorização clínica."
+                "</div>"
+            )
+
+        if nao:
+            resultado_html += "<div class='resultado nao'><h3>🔴 Não indicada</h3>"
+            for v in nao:
+                resultado_html += f"<p>{v}</p>"
+            resultado_html += "</div>"
+
+    # ---------- FORMULÁRIO ----------
+    form_vacinas = ""
+    for vacina, meses_vacina in VACINAS_FORM.items():
+        form_vacinas += f"<div class='vacina'><b>{vacina}</b><br>"
+        for m in meses_vacina:
+            label = "ao nascer" if m == 0 else f"{m} meses"
+            checked = ""
+            if vacina in doses_marcadas and str(m) in doses_marcadas[vacina]:
+                checked = "checked"
+            form_vacinas += (
+                f'<label><input type="checkbox" name="{vacina}" value="{m}" {checked}> {label}</label> '
+            )
+        form_vacinas += "</div>"
+
+    return f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>Sistema de Imunização Infantil</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background: #f0f7fb;
+                padding: 20px;
+            }}
+            .container {{
+                max-width: 900px;
+                margin: auto;
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+            }}
+            .vacina {{
+                background: #f8fafc;
+                padding: 10px;
+                margin-bottom: 8px;
+                border-radius: 6px;
+            }}
+            button {{
+                background: #0284c7;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-size: 16px;
+                cursor: pointer;
+            }}
+            .secundario {{
+                background: #64748b;
+                margin-left: 10px;
+            }}
+            .resultado {{
+                margin-top: 20px;
+                padding: 15px;
+                border-radius: 8px;
+            }}
+            .pode {{
+                background: #ecfeff;
+                border-left: 6px solid #06b6d4;
+            }}
+            .nao {{
+                background: #fef2f2;
+                border-left: 6px solid #ef4444;
+            }}
+            .alerta {{
+                margin-top: 15px;
+                background: #fff7ed;
+                padding: 10px;
+                border-left: 6px solid #f59e0b;
+                border-radius: 6px;
+                font-size: 14px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>💉 Sistema de Apoio à Decisão – Imunização Infantil</h2>
+
+            <form method="post">
+                <b>Idade da criança:</b><br>
+                <input type="number" name="anos" min="0" max="6" value="{anos}"> anos
+                <input type="number" name="meses" min="0" max="11" value="{meses}"> meses
+                <br><br>
+
+                {form_vacinas}
+
+                <br>
+                <button type="submit">Avaliar</button>
+                <a href="/" style="text-decoration:none;">
+                    <button type="button" class="secundario">Avaliar próximo caso</button>
+                </a>
+            </form>
+
+            {"<hr>" + resultado_html if mostrar_resultado else ""}
+        </div>
+    </body>
+    </html>
+    """
+
+if __name__ == "__main__":
+    app.run(debug=True)
