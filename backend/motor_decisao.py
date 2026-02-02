@@ -3,7 +3,9 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     nao_indicadas = []
 
     calendario = {
-        "BCG": [{"mes": 0, "tipo": "Dose única"}],
+       "BCG": [
+    {"mes": 0, "tipo": "Dose única", "max": 59},
+],
         "Hepatite B": [{"mes": 0, "tipo": "Dose/RN"}],
 
         "Pentavalente": [
