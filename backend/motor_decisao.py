@@ -3,19 +3,9 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     nao_indicadas = []
 
     calendario = {
-       "BCG": [
-    {"mes": 0, "tipo": "Dose única", "max": 59},
-],
-       # 🔶 HEPATITE B – REGRA ESPECIAL (RN apenas)
-doses_hepb = doses_aplicadas.get("Hepatite B", [])
-
-if idade_meses == 0 and not doses_hepb:
-    pode_administrar.append({
-        "vacina": "Hepatite B",
-        "dose": "Dose RN",
-        "faltam": 0
-    })
-
+        "BCG": [
+            {"mes": 0, "tipo": "Dose única", "max": 59},
+        ],
 
         "Pentavalente": [
             {"mes": 2, "tipo": "D1"},
@@ -57,9 +47,8 @@ if idade_meses == 0 and not doses_hepb:
         ],
 
         "Hepatite A": [
-    {"mes": 15, "tipo": "D1", "max": 59},
-],
-
+            {"mes": 15, "tipo": "D1", "max": 59},
+        ],
     }
 
     # 🔶 FEBRE AMARELA – REGRA ESPECIAL
@@ -95,15 +84,16 @@ if idade_meses == 0 and not doses_hepb:
                 "faltam": len(futuras)
             })
             break
-# 🔶 HEPATITE B – REGRA ESPECIAL (RN apenas)
-doses_hepb = doses_aplicadas.get("Hepatite B", [])
 
-if idade_meses == 0 and not doses_hepb:
-    pode_administrar.append({
-        "vacina": "Hepatite B",
-        "dose": "Dose RN",
-        "faltam": 0
-    })
+    # 🔶 HEPATITE B – REGRA ESPECIAL (RN apenas)
+    doses_hepb = doses_aplicadas.get("Hepatite B", [])
+
+    if idade_meses == 0 and not doses_hepb:
+        pode_administrar.append({
+            "vacina": "Hepatite B",
+            "dose": "Dose RN",
+            "faltam": 0
+        })
 
     # 🔷 DEMAIS VACINAS
     for vacina, esquema in calendario.items():
@@ -119,7 +109,7 @@ if idade_meses == 0 and not doses_hepb:
 
             if idade_max is not None and idade_meses > idade_max:
                 nao_indicadas.append(f"{vacina} — fora da idade permitida")
-                continue
+                break
 
             if mes_dose in aplicadas:
                 continue
@@ -137,3 +127,4 @@ if idade_meses == 0 and not doses_hepb:
             break
 
     return pode_administrar, nao_indicadas
+
