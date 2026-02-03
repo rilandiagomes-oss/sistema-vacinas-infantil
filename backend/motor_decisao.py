@@ -95,6 +95,15 @@ if idade_meses == 0 and not doses_hepb:
                 "faltam": len(futuras)
             })
             break
+# 🔶 HEPATITE B – REGRA ESPECIAL (RN apenas)
+doses_hepb = doses_aplicadas.get("Hepatite B", [])
+
+if idade_meses == 0 and not doses_hepb:
+    pode_administrar.append({
+        "vacina": "Hepatite B",
+        "dose": "Dose RN",
+        "faltam": 0
+    })
 
     # 🔷 DEMAIS VACINAS
     for vacina, esquema in calendario.items():
