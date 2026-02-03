@@ -6,7 +6,16 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
        "BCG": [
     {"mes": 0, "tipo": "Dose única", "max": 59},
 ],
-        "Hepatite B": [{"mes": 0, "tipo": "Dose/RN"}],
+       # 🔶 HEPATITE B – REGRA ESPECIAL (RN apenas)
+doses_hepb = doses_aplicadas.get("Hepatite B", [])
+
+if idade_meses == 0 and not doses_hepb:
+    pode_administrar.append({
+        "vacina": "Hepatite B",
+        "dose": "Dose RN",
+        "faltam": 0
+    })
+
 
         "Pentavalente": [
             {"mes": 2, "tipo": "D1"},
