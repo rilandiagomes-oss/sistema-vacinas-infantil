@@ -10,7 +10,7 @@ VACINAS = {
     "Hepatite B": {
         "doses_previstas": [0],
         "idade_min": 0,
-        "idade_max": 1,
+        "idade_max": 0,
     },
 
     "Pentavalente": {
