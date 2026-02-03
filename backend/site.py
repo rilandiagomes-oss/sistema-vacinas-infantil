@@ -22,7 +22,6 @@ def index():
     mostrar_resultado = False
     resultado_html = ""
 
-    # Valores padrão (GET)
     anos = 0
     meses = 0
     doses_marcadas = {}
@@ -39,7 +38,6 @@ def index():
             for vacina in VACINAS_FORM
         }
 
-        # Converter para int
         doses = {
             vacina: [int(m) for m in meses_lista]
             for vacina, meses_lista in doses_marcadas.items()
@@ -89,7 +87,6 @@ def index():
                 resultado_html += f"<p>{v}</p>"
             resultado_html += "</div>"
 
-    # ---------- FORMULÁRIO ----------
     form_vacinas = ""
     for vacina, meses_vacina in VACINAS_FORM.items():
         form_vacinas += f"<div class='vacina'><b>{vacina}</b><br>"
@@ -114,6 +111,7 @@ def index():
                 background: #f0f7fb;
                 padding: 20px;
             }}
+
             .container {{
                 max-width: 900px;
                 margin: auto;
@@ -121,38 +119,64 @@ def index():
                 padding: 20px;
                 border-radius: 10px;
             }}
+
+            h2 {{
+                text-align: center;
+            }}
+
+            .label-idade {{
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 8px;
+                display: block;
+            }}
+
+            input[type="number"] {{
+                font-size: 18px;
+                padding: 10px;
+                width: 100px;
+                margin-right: 10px;
+            }}
+
             .vacina {{
                 background: #f8fafc;
                 padding: 10px;
                 margin-bottom: 8px;
                 border-radius: 6px;
             }}
+
             button {{
                 background: #0284c7;
                 color: white;
                 border: none;
-                padding: 12px 20px;
-                border-radius: 6px;
-                font-size: 16px;
+                padding: 14px;
+                border-radius: 8px;
+                font-size: 18px;
                 cursor: pointer;
+                width: 100%;
+                margin-top: 10px;
             }}
+
             .secundario {{
                 background: #64748b;
-                margin-left: 10px;
             }}
+
             .resultado {{
                 margin-top: 20px;
                 padding: 15px;
                 border-radius: 8px;
             }}
+
             .pode {{
                 background: #ecfeff;
                 border-left: 6px solid #06b6d4;
             }}
+
             .nao {{
                 background: #fef2f2;
                 border-left: 6px solid #ef4444;
             }}
+
             .alerta {{
                 margin-top: 15px;
                 background: #fff7ed;
@@ -161,6 +185,13 @@ def index():
                 border-radius: 6px;
                 font-size: 14px;
             }}
+
+            @media (max-width: 600px) {{
+                input[type="number"] {{
+                    width: 100%;
+                    margin-bottom: 10px;
+                }}
+            }}
         </style>
     </head>
     <body>
@@ -168,14 +199,14 @@ def index():
             <h2>💉 Sistema de Apoio à Decisão – Imunização Infantil</h2>
 
             <form method="post">
-                <b>Idade da criança:</b><br>
+                <label class="label-idade">Idade da criança:</label>
                 <input type="number" name="anos" min="0" max="6" value="{anos}"> anos
                 <input type="number" name="meses" min="0" max="11" value="{meses}"> meses
+
                 <br><br>
 
                 {form_vacinas}
 
-                <br>
                 <button type="submit">Avaliar</button>
                 <a href="/" style="text-decoration:none;">
                     <button type="button" class="secundario">Avaliar próximo caso</button>
