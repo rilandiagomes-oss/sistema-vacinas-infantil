@@ -98,6 +98,12 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     # 🔷 DEMAIS VACINAS
     for vacina, esquema in calendario.items():
         aplicadas = doses_aplicadas.get(vacina, [])
+        # 🔴 DTP só pode ser recomendada após esquema básico completo (3 doses de Pentavalente)
+        if vacina == "DTP":
+            doses_penta = doses_aplicadas.get("Pentavalente", [])
+            if len(doses_penta) < 3:
+                continue
+
 
         for dose in esquema:
             mes_dose = dose["mes"]
