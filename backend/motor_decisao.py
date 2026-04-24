@@ -44,6 +44,10 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             {"mes": 15, "tipo": "D2"},
         ],
 
+        "Varicela": [
+            {"mes": 48, "tipo": "R", "max": 72},
+        ],
+
         "DTP": [
             {"mes": 15, "tipo": "R"},
             {"mes": 48, "tipo": "R"},
@@ -53,6 +57,21 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             {"mes": 15, "tipo": "D1", "max": 59},
         ],
     }
+
+    # 🔶 TETRAVIRAL – REGRA DE RESGATE
+    doses_tetra = doses_aplicadas.get("Tetraviral (SCR + Varicela)", [])
+
+    if idade_meses >= 15 and not doses_tetra:
+        pode_administrar.append({
+            "vacina": "Tetraviral (SCR + Varicela)",
+            "dose": "D2",
+            "faltam": 0
+        })
+
+    # 🔒 Bloqueio da varicela se não fez tetraviral
+    bloquear_varicela = False
+    if idade_meses >= 15 and not doses_tetra:
+        bloquear_varicela = True
 
     # 🔶 FEBRE AMARELA
     doses_fa = doses_aplicadas.get("Febre Amarela", [])
@@ -102,11 +121,19 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     for vacina, esquema in calendario.items():
         aplicadas = doses_aplicadas.get(vacina, [])
 
+        # 🔒 Bloqueio da varicela
+        if vacina == "Varicela" and bloquear_varicela:
+            continue
+
         # DTP depende da Pentavalente
         if vacina == "DTP":
             doses_penta = doses_aplicadas.get("Pentavalente", [])
             if len(doses_penta) < 3:
                 continue
+
+        # ✅ Verifica se esquema já está completo
+        if all(d["mes"] in aplicadas for d in esquema):
+            continue
 
         for dose in esquema:
             mes_dose = dose["mes"]
@@ -116,6 +143,7 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             if idade_meses < mes_dose:
                 continue
 
+            # 🔴 Só avalia idade máxima se ainda falta dose
             if idade_max is not None and idade_meses > idade_max:
                 nao_indicadas.append(f"{vacina} — fora da idade permitida")
                 break
