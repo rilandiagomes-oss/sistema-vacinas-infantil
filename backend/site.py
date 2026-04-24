@@ -22,87 +22,47 @@ VACINAS_FORM = {
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    mostrar_resultado = False
     resultado_html = ""
 
-    anos = 0
-    meses = 0
-    doses_marcadas = {}
-
     if request.method == "POST":
-        mostrar_resultado = True
+        idade = int(request.form.get("anos", 0)) * 12 + int(request.form.get("meses", 0))
 
-        anos = int(request.form.get("anos", 0))
-        meses = int(request.form.get("meses", 0))
-        idade_meses = anos * 12 + meses
-
-        doses_marcadas = {
-            vacina: request.form.getlist(vacina)
+        doses = {
+            vacina: [int(m) for m in request.form.getlist(vacina)]
             for vacina in VACINAS_FORM
         }
 
-        doses = {
-            vacina: [int(m) for m in meses_lista]
-            for vacina, meses_lista in doses_marcadas.items()
-        }
+        pode, nao = avaliar_vacinas(idade, doses)
 
-        pode, nao = avaliar_vacinas(idade_meses, doses)
+        resultado_html += "<h3>🟢 Pode administrar</h3>"
 
-        resultado_html += "<div class='resultado pode'><h3>🟢 Pode administrar</h3>"
-
-        if pode:
-            for item in pode:
-                vacina = item["vacina"]
-                dose = item.get("dose", "")
-                faltam = item.get("faltam", 0)
-                obs = item.get("obs", "")
-
-                dose_txt = "Reforço" if dose == "R" else dose
-
-                if faltam == 0:
-                    texto = f"<p><b>{vacina}</b> — {dose_txt}</p>"
-                elif faltam == 1:
-                    texto = f"<p><b>{vacina}</b> — {dose_txt}. Após a administração de hoje, faltará uma dose.</p>"
-                else:
-                    texto = f"<p><b>{vacina}</b> — {dose_txt}. Após a administração de hoje, faltam {faltam} doses.</p>"
-
-                if obs:
-                    texto += f"<p style='color:#b45309; font-size:14px;'>⚠️ {obs}</p>"
-
-                resultado_html += texto
-        else:
-            resultado_html += "<p>Nenhuma vacina indicada.</p>"
-
-        resultado_html += "</div>"
+        for item in pode:
+            texto = f"<p><b>{item['vacina']}</b> — {item['dose']}</p>"
+            if item.get("obs"):
+                texto += f"<p style='color:orange'>⚠️ {item['obs']}</p>"
+            resultado_html += texto
 
         if nao:
-            resultado_html += "<div class='resultado nao'><h3>🔴 Não indicada</h3>"
+            resultado_html += "<h3>🔴 Não indicada</h3>"
             for v in nao:
                 resultado_html += f"<p>{v}</p>"
-            resultado_html += "</div>"
 
-    form_vacinas = ""
-    for vacina, meses_vacina in VACINAS_FORM.items():
-        form_vacinas += f"<div class='vacina'><b>{vacina}</b><br>"
-        for m in meses_vacina:
+    form = ""
+    for vacina, meses in VACINAS_FORM.items():
+        form += f"<p><b>{vacina}</b><br>"
+        for m in meses:
             label = "ao nascer" if m == 0 else f"{m} meses"
-            form_vacinas += f'<label><input type="checkbox" name="{vacina}" value="{m}"> {label}</label> '
-        form_vacinas += "</div>"
+            form += f'<input type="checkbox" name="{vacina}" value="{m}"> {label} '
+        form += "</p>"
 
     return f"""
-    <html>
-    <body>
-        <h2>💉 Sistema de Imunização Infantil</h2>
-        <form method="post">
-            <input type="number" name="anos" placeholder="anos">
-            <input type="number" name="meses" placeholder="meses">
-            <br><br>
-            {form_vacinas}
-            <button type="submit">Avaliar</button>
-        </form>
-        {"<hr>" + resultado_html if mostrar_resultado else ""}
-    </body>
-    </html>
+    <h2>Sistema de Vacinação</h2>
+    <form method="post">
+        Idade: <input name="anos"> anos <input name="meses"> meses
+        {form}
+        <button>Calcular</button>
+    </form>
+    {resultado_html}
     """
 
 if __name__ == "__main__":
