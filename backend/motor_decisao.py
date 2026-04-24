@@ -41,6 +41,10 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             {"mes": 15, "tipo": "D2"},
         ],
 
+        "Varicela": [
+            {"mes": 15, "tipo": "D1", "max": 59},
+        ],
+
         "DTP": [
             {"mes": 15, "tipo": "R"},
             {"mes": 48, "tipo": "R"},
@@ -51,7 +55,22 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
         ],
     }
 
-    # 🔶 FEBRE AMARELA – REGRA ESPECIAL
+    # 🔶 TETRAVIRAL – REGRA ESPECIAL
+    doses_scr = doses_aplicadas.get("Tríplice Viral (SCR)", [])
+    doses_varicela = doses_aplicadas.get("Varicela", [])
+
+    tetraviral_indicada = False
+
+    if idade_meses >= 15:
+        if len(doses_scr) == 1 and not doses_varicela:
+            pode_administrar.append({
+                "vacina": "Tetraviral (SCR + Varicela)",
+                "dose": "D2",
+                "faltam": 0
+            })
+            tetraviral_indicada = True
+
+    # 🔶 FEBRE AMARELA
     doses_fa = doses_aplicadas.get("Febre Amarela", [])
 
     if idade_meses >= 60:
@@ -85,7 +104,7 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             })
             break
 
-    # 🔶 HEPATITE B – REGRA ESPECIAL (RN apenas)
+    # 🔶 HEPATITE B (RN)
     doses_hepb = doses_aplicadas.get("Hepatite B", [])
 
     if idade_meses == 0 and not doses_hepb:
@@ -98,12 +117,16 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     # 🔷 DEMAIS VACINAS
     for vacina, esquema in calendario.items():
         aplicadas = doses_aplicadas.get(vacina, [])
-        # 🔴 DTP só pode ser recomendada após esquema básico completo (3 doses de Pentavalente)
+
+        # Evitar duplicidade com tetraviral
+        if tetraviral_indicada and vacina in ["Tríplice Viral (SCR)", "Varicela"]:
+            continue
+
+        # DTP depende da Pentavalente
         if vacina == "DTP":
             doses_penta = doses_aplicadas.get("Pentavalente", [])
             if len(doses_penta) < 3:
                 continue
-
 
         for dose in esquema:
             mes_dose = dose["mes"]
@@ -133,4 +156,3 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             break
 
     return pode_administrar, nao_indicadas
-
