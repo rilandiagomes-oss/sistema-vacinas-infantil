@@ -11,8 +11,8 @@ VACINAS_FORM = {
     "Rotavírus": [2, 4],
     "Pneumocócica 10v": [2, 4, 12],
     "Meningocócica C": [3, 5, 12],
-    "Tríplice Viral (SCR)": [12, 15],
-    "Varicela": [15],
+    "Tríplice Viral (SCR)": [12],
+    "Tetraviral (SCR + Varicela)": [15],
     "DTP": [15, 48],
     "Hepatite A": [15],
     "Febre Amarela": [9, 48],
@@ -91,7 +91,7 @@ def index():
                 resultado_html += f"<p>{v}</p>"
             resultado_html += "</div>"
 
-    # 🔽 Formulário de vacinas
+    # 🔽 Formulário
     form_vacinas = ""
     for vacina, meses_vacina in VACINAS_FORM.items():
         form_vacinas += f"<div class='vacina'><b>{vacina}</b><br>"
@@ -109,7 +109,7 @@ def index():
     <html>
     <head>
         <meta charset="utf-8">
-        <title>Sistema de TESTE NOVO SISTEMA</title>
+        <title>Sistema de Imunização Infantil</title>
         <style>
             body {{
                 font-family: Arial, sans-serif;
@@ -201,7 +201,7 @@ def index():
     </head>
     <body>
         <div class="container">
-            <h2>💉 Sistema de Apoio à Decisão – teste Imunização Infantil</h2>
+            <h2>💉 Sistema de Apoio à Decisão – Imunização Infantil</h2>
 
             <form method="post">
                 <label class="label-idade">Idade da criança:</label>
