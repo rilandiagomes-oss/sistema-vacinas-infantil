@@ -58,9 +58,8 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
         ],
     }
 
-    # 🔶 TETRAVIRAL – REGRA DE RESGATE
+    # 🔶 TETRAVIRAL – RESGATE
     doses_tetra = doses_aplicadas.get("Tetraviral (SCR + Varicela)", [])
-
     if idade_meses >= 15 and not doses_tetra:
         pode_administrar.append({
             "vacina": "Tetraviral (SCR + Varicela)",
@@ -68,14 +67,28 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             "faltam": 0
         })
 
-    # 🔒 Bloqueio da varicela se não fez tetraviral
-    bloquear_varicela = False
-    if idade_meses >= 15 and not doses_tetra:
-        bloquear_varicela = True
+    bloquear_varicela = idade_meses >= 15 and not doses_tetra
+
+    # 🔶 MENINGOCÓCICA ACWY
+    doses_menc = doses_aplicadas.get("Meningocócica C", [])
+    doses_acwy = doses_aplicadas.get("Meningocócica ACWY", [])
+    tem_menc_d2 = len(doses_menc) >= 2
+
+    if (
+        idade_meses >= 12
+        and idade_meses <= 59
+        and tem_menc_d2
+        and not doses_acwy
+    ):
+        pode_administrar.append({
+            "vacina": "Meningocócica ACWY",
+            "dose": "Dose única",
+            "faltam": 0,
+            "obs": "Respeitar intervalo mínimo de 60 dias após a 2ª dose da meningocócica C."
+        })
 
     # 🔶 FEBRE AMARELA
     doses_fa = doses_aplicadas.get("Febre Amarela", [])
-
     if idade_meses >= 60:
         if not doses_fa:
             pode_administrar.append({
@@ -109,7 +122,6 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
 
     # 🔶 HEPATITE B (RN)
     doses_hepb = doses_aplicadas.get("Hepatite B", [])
-
     if idade_meses == 0 and not doses_hepb:
         pode_administrar.append({
             "vacina": "Hepatite B",
@@ -121,17 +133,14 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     for vacina, esquema in calendario.items():
         aplicadas = doses_aplicadas.get(vacina, [])
 
-        # 🔒 Bloqueio da varicela
         if vacina == "Varicela" and bloquear_varicela:
             continue
 
-        # DTP depende da Pentavalente
         if vacina == "DTP":
             doses_penta = doses_aplicadas.get("Pentavalente", [])
             if len(doses_penta) < 3:
                 continue
 
-        # ✅ Verifica se esquema já está completo
         if all(d["mes"] in aplicadas for d in esquema):
             continue
 
@@ -143,7 +152,6 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             if idade_meses < mes_dose:
                 continue
 
-            # 🔴 Só avalia idade máxima se ainda falta dose
             if idade_max is not None and idade_meses > idade_max:
                 nao_indicadas.append(f"{vacina} — fora da idade permitida")
                 break
