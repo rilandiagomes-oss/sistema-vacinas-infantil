@@ -3,9 +3,7 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     nao_indicadas = []
 
     calendario = {
-        "BCG": [
-            {"mes": 0, "tipo": "Dose única", "max": 59},
-        ],
+        "BCG": [{"mes": 0, "tipo": "Dose única", "max": 59}],
 
         "Pentavalente": [
             {"mes": 2, "tipo": "D1"},
@@ -54,7 +52,7 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
         ],
     }
 
-    # 🔶 TETRAVIRAL – RESGATE CORRIGIDO
+    # 🔶 TETRAVIRAL (REGRA CORRETA)
     doses_tetra = doses_aplicadas.get("Tetraviral (SCR + Varicela)", [])
     doses_scr = doses_aplicadas.get("Tríplice Viral (SCR)", [])
 
@@ -65,21 +63,13 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             "faltam": 0
         })
 
-    # 🔒 Bloqueia varicela se não fez tetraviral
     bloquear_varicela = idade_meses >= 15 and not doses_tetra
 
-    # 🔶 MENINGOCÓCICA ACWY
+    # 🔶 ACWY
     doses_menc = doses_aplicadas.get("Meningocócica C", [])
     doses_acwy = doses_aplicadas.get("Meningocócica ACWY", [])
 
-    tem_menc_d2 = len(doses_menc) >= 2
-
-    if (
-        idade_meses >= 12
-        and idade_meses <= 59
-        and tem_menc_d2
-        and not doses_acwy
-    ):
+    if idade_meses >= 12 and idade_meses <= 59 and len(doses_menc) >= 2 and not doses_acwy:
         pode_administrar.append({
             "vacina": "Meningocócica ACWY",
             "dose": "Dose única",
@@ -87,7 +77,7 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             "obs": "Respeitar intervalo mínimo de 60 dias após a 2ª dose da meningocócica C."
         })
 
-    # 🔶 FEBRE AMARELA (CORRIGIDA)
+    # 🔶 FEBRE AMARELA
     doses_fa = doses_aplicadas.get("Febre Amarela", [])
 
     if not doses_fa:
@@ -99,17 +89,15 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
                 "faltam": faltam
             })
 
-    elif len(doses_fa) == 1:
-        if idade_meses >= 48:
-            pode_administrar.append({
-                "vacina": "Febre Amarela",
-                "dose": "R",
-                "faltam": 0
-            })
+    elif len(doses_fa) == 1 and idade_meses >= 48:
+        pode_administrar.append({
+            "vacina": "Febre Amarela",
+            "dose": "R",
+            "faltam": 0
+        })
 
-    # 🔶 HEPATITE B (RN)
-    doses_hepb = doses_aplicadas.get("Hepatite B", [])
-    if idade_meses == 0 and not doses_hepb:
+    # 🔶 HEP B RN
+    if idade_meses == 0 and not doses_aplicadas.get("Hepatite B"):
         pode_administrar.append({
             "vacina": "Hepatite B",
             "dose": "Dose RN",
@@ -124,37 +112,29 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             continue
 
         if vacina == "DTP":
-            doses_penta = doses_aplicadas.get("Pentavalente", [])
-            if len(doses_penta) < 3:
+            if len(doses_aplicadas.get("Pentavalente", [])) < 3:
                 continue
 
-        # ✔ evita erro do rotavírus (esquema completo)
+        # evita erro rotavírus
         if all(d["mes"] in aplicadas for d in esquema):
             continue
 
         for dose in esquema:
-            mes_dose = dose["mes"]
-            tipo = dose["tipo"]
-            idade_max = dose.get("max")
-
-            if idade_meses < mes_dose:
+            if idade_meses < dose["mes"]:
                 continue
 
-            if idade_max is not None and idade_meses > idade_max:
+            if dose.get("max") and idade_meses > dose["max"]:
                 nao_indicadas.append(f"{vacina} — fora da idade permitida")
                 break
 
-            if mes_dose in aplicadas:
+            if dose["mes"] in aplicadas:
                 continue
 
-            futuras = [
-                d for d in esquema
-                if d["mes"] > mes_dose and d["mes"] not in aplicadas
-            ]
+            futuras = [d for d in esquema if d["mes"] > dose["mes"] and d["mes"] not in aplicadas]
 
             pode_administrar.append({
                 "vacina": vacina,
-                "dose": tipo,
+                "dose": dose["tipo"],
                 "faltam": len(futuras)
             })
             break
