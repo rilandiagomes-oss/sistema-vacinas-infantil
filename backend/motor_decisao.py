@@ -38,11 +38,10 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
 
         "Tríplice Viral (SCR)": [
             {"mes": 12, "tipo": "D1"},
-            {"mes": 15, "tipo": "D2"},
         ],
 
-        "Varicela": [
-            {"mes": 15, "tipo": "D1", "max": 59},
+        "Tetraviral (SCR + Varicela)": [
+            {"mes": 15, "tipo": "D2"},
         ],
 
         "DTP": [
@@ -54,21 +53,6 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             {"mes": 15, "tipo": "D1", "max": 59},
         ],
     }
-
-    # 🔶 TETRAVIRAL – REGRA ESPECIAL
-    doses_scr = doses_aplicadas.get("Tríplice Viral (SCR)", [])
-    doses_varicela = doses_aplicadas.get("Varicela", [])
-
-    tetraviral_indicada = False
-
-    if idade_meses >= 15:
-        if len(doses_scr) == 1 and not doses_varicela:
-            pode_administrar.append({
-                "vacina": "Tetraviral (SCR + Varicela)",
-                "dose": "D2",
-                "faltam": 0
-            })
-            tetraviral_indicada = True
 
     # 🔶 FEBRE AMARELA
     doses_fa = doses_aplicadas.get("Febre Amarela", [])
@@ -117,10 +101,6 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
     # 🔷 DEMAIS VACINAS
     for vacina, esquema in calendario.items():
         aplicadas = doses_aplicadas.get(vacina, [])
-
-        # Evitar duplicidade com tetraviral
-        if tetraviral_indicada and vacina in ["Tríplice Viral (SCR)", "Varicela"]:
-            continue
 
         # DTP depende da Pentavalente
         if vacina == "DTP":
