@@ -109,7 +109,7 @@ def index():
     <html>
     <head>
         <meta charset="utf-8">
-        <title>Sistema de Imunização Infantil</title>
+        <title>Sistema de TESTE NOVO SISTEMA</title>
         <style>
             body {{
                 font-family: Arial, sans-serif;
