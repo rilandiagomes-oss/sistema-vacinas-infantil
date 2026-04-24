@@ -12,6 +12,7 @@ VACINAS_FORM = {
     "Pneumocócica 10v": [2, 4, 12],
     "Meningocócica C": [3, 5, 12],
     "Tríplice Viral (SCR)": [12, 15],
+    "Varicela": [15],
     "DTP": [15, 48],
     "Hepatite A": [15],
     "Febre Amarela": [9, 48],
@@ -45,6 +46,7 @@ def index():
 
         pode, nao = avaliar_vacinas(idade_meses, doses)
 
+        # 🟢 Pode administrar
         resultado_html += "<div class='resultado pode'><h3>🟢 Pode administrar</h3>"
 
         if pode:
@@ -74,6 +76,7 @@ def index():
 
         resultado_html += "</div>"
 
+        # ⚠️ Alerta
         if len(pode) >= 5:
             resultado_html += (
                 "<div class='alerta'>"
@@ -81,12 +84,14 @@ def index():
                 "</div>"
             )
 
+        # 🔴 Não indicadas
         if nao:
             resultado_html += "<div class='resultado nao'><h3>🔴 Não indicada</h3>"
             for v in nao:
                 resultado_html += f"<p>{v}</p>"
             resultado_html += "</div>"
 
+    # 🔽 Formulário de vacinas
     form_vacinas = ""
     for vacina, meses_vacina in VACINAS_FORM.items():
         form_vacinas += f"<div class='vacina'><b>{vacina}</b><br>"
