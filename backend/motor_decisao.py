@@ -40,10 +40,6 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             {"mes": 12, "tipo": "D1"},
         ],
 
-        "Tetraviral (SCR + Varicela)": [
-            {"mes": 15, "tipo": "D2"},
-        ],
-
         "Varicela": [
             {"mes": 48, "tipo": "R", "max": 72},
         ],
@@ -58,20 +54,24 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
         ],
     }
 
-    # 🔶 TETRAVIRAL – RESGATE
+    # 🔶 TETRAVIRAL – RESGATE CORRIGIDO
     doses_tetra = doses_aplicadas.get("Tetraviral (SCR + Varicela)", [])
-    if idade_meses >= 15 and not doses_tetra:
+    doses_scr = doses_aplicadas.get("Tríplice Viral (SCR)", [])
+
+    if idade_meses >= 15 and not doses_tetra and len(doses_scr) >= 1:
         pode_administrar.append({
             "vacina": "Tetraviral (SCR + Varicela)",
-            "dose": "D2",
+            "dose": "Dose única",
             "faltam": 0
         })
 
+    # 🔒 Bloqueia varicela se não fez tetraviral
     bloquear_varicela = idade_meses >= 15 and not doses_tetra
 
     # 🔶 MENINGOCÓCICA ACWY
     doses_menc = doses_aplicadas.get("Meningocócica C", [])
     doses_acwy = doses_aplicadas.get("Meningocócica ACWY", [])
+
     tem_menc_d2 = len(doses_menc) >= 2
 
     if (
@@ -87,38 +87,25 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             "obs": "Respeitar intervalo mínimo de 60 dias após a 2ª dose da meningocócica C."
         })
 
-    # 🔶 FEBRE AMARELA
+    # 🔶 FEBRE AMARELA (CORRIGIDA)
     doses_fa = doses_aplicadas.get("Febre Amarela", [])
-    if idade_meses >= 60:
-        if not doses_fa:
+
+    if not doses_fa:
+        if idade_meses >= 9:
+            faltam = 1 if idade_meses < 48 else 0
             pode_administrar.append({
                 "vacina": "Febre Amarela",
-                "dose": "Dose única",
+                "dose": "D1",
+                "faltam": faltam
+            })
+
+    elif len(doses_fa) == 1:
+        if idade_meses >= 48:
+            pode_administrar.append({
+                "vacina": "Febre Amarela",
+                "dose": "R",
                 "faltam": 0
             })
-    else:
-        esquema_fa = [
-            {"mes": 9, "tipo": "D1"},
-            {"mes": 48, "tipo": "R"},
-        ]
-
-        for dose in esquema_fa:
-            if idade_meses < dose["mes"]:
-                continue
-            if dose["mes"] in doses_fa:
-                continue
-
-            futuras = [
-                d for d in esquema_fa
-                if d["mes"] > dose["mes"] and d["mes"] not in doses_fa
-            ]
-
-            pode_administrar.append({
-                "vacina": "Febre Amarela",
-                "dose": dose["tipo"],
-                "faltam": len(futuras)
-            })
-            break
 
     # 🔶 HEPATITE B (RN)
     doses_hepb = doses_aplicadas.get("Hepatite B", [])
@@ -141,6 +128,7 @@ def avaliar_vacinas(idade_meses, doses_aplicadas):
             if len(doses_penta) < 3:
                 continue
 
+        # ✔ evita erro do rotavírus (esquema completo)
         if all(d["mes"] in aplicadas for d in esquema):
             continue
 
